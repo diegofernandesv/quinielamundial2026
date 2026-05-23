@@ -1,0 +1,31 @@
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
+import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+interface EmptyStateProps {
+  icon?: LucideIcon
+  title: string
+  description?: string
+  action?: { label: string; href: string }
+  className?: string
+}
+
+export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center", className)}>
+      {Icon && (
+        <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+          <Icon className="size-7 text-muted-foreground" />
+        </div>
+      )}
+      <h3 className="font-semibold text-lg mb-1">{title}</h3>
+      {description && <p className="text-muted-foreground text-sm max-w-sm">{description}</p>}
+      {action && (
+        <Button asChild className="mt-4" size="sm">
+          <Link href={action.href}>{action.label}</Link>
+        </Button>
+      )}
+    </div>
+  )
+}

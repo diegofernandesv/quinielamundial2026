@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiniela Mundial 2026
 
-## Getting Started
+Plataforma de predicciones para el Mundial FIFA 2026 (USA, México & Canadá). Construida con Next.js 16, Supabase, Tailwind CSS v4 y shadcn/ui base-nova.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Server Components, React 19)
+- **TypeScript** estricto
+- **Supabase** — PostgreSQL, Auth, RLS, Realtime
+- **Tailwind CSS v4** + **shadcn/ui** (base-nova style + Base UI primitives)
+- **React Hook Form** + **Zod** para formularios
+- **sonner** para notificaciones toast
+- **next-themes** para dark/light mode
+- **date-fns** para manejo de fechas
+
+## Configuración
+
+### 1. Clonar e instalar
+
+```bash
+npm install
+```
+
+### 2. Variables de entorno
+
+```bash
+cp .env.local.example .env.local
+# Editar con tus claves de Supabase
+```
+
+### 3. Base de datos Supabase
+
+En el **SQL Editor** de tu proyecto Supabase, ejecuta el archivo `supabase-schema.sql` completo.
+
+Incluye:
+- 14 tablas con RLS, índices y constraints
+- Triggers para `updated_at`, auto-perfil, lock de predicciones
+- Funciones `calculate_prediction_points`, `score_match_predictions`, `recalculate_leaderboard`
+- Trigger automático que calcula puntos y actualiza leaderboard cuando un partido se marca como `finished`
+- Seed de grupos A–L
+
+### 4. Crear super_admin
+
+Después de registrarte, ejecuta en Supabase SQL:
+```sql
+UPDATE profiles SET role = 'super_admin' WHERE email = 'tu@email.com';
+```
+
+### 5. Correr en desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Estructura de carpetas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/
+│   ├── (auth)/             # Login, Register (sin shell)
+│   │   ├── login/
+│   │   └── register/
+│   ├── (private)/          # Auth guard
+│   │   ├── (shell)/        # Con AppShell sin poolId
+│   │   │   ├── dashboard/
+│   │   │   ├── pools/
+│   │   │   └── profile/
+│   │   └── pools/[poolId]/ # Con AppShell + sidebar de quiniela
+│   │       ├── layout.tsx
+│   │       ├── page.tsx
+│   │       ├── predictions/
+│   │       ├── leaderboard/
+│   │       ├── groups/
+│   │       ├── bracket/
+│   │       ├── bonus/
+│   │       ├── rules/
+│   │       └── settings/
+│   ├── (admin)/            # Solo super_admin
+│   │   └── admin/
+│   │       ├── teams/
+│   │       ├── matches/
+│   │       ├── results/
+│   │       ├── users/
+│   │       └── recalculate/
+│   └── join/[inviteCode]/  # Página pública de invitación
+├── components/
+│   ├── ui/                 # shadcn/ui (base-nova + Base UI)
+│   ├── layout/             # AppShell, Sidebar, UserAvatar
+│   ├── pools/              # PoolCard, InviteMemberDialog
+│   ├── predictions/        # MatchPredictionCard, ScoreInput
+│   ├── leaderboard/        # LeaderboardTable
+│   ├── groups/             # GroupStandingsTable
+│   └── bracket/            # BracketView
+├── lib/
+│   ├── supabase/           # client.ts, server.ts
+│   ├── utils/              # format.ts, csv.ts, cn.ts
+│   ├── scoring.ts          # Lógica de puntos (cliente)
+│   └── validations/        # Zod schemas
+├── types/
+│   └── database.ts         # Todos los tipos TypeScript
+└── middleware.ts            # Protección de rutas
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Fases de implementación MVP
 
-## Learn More
+### Fase 1 ✅ (completada en este scaffold)
+- Auth (login/register/middleware/RLS)
+- Crear y unirse a quinielas
+- Cargar partidos (admin)
+- Hacer predicciones con deadline automático
+- Leaderboard básico con Export CSV
 
-To learn more about Next.js, take a look at the following resources:
+### Fase 2 (próxima)
+- Tabla de grupos calculada en tiempo real
+- Bracket visual de eliminatorias
+- Predicciones bonus (campeón/subcampeón/semifinalistas)
+- Reglas de puntuación custom por quiniela
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Fase 3 (avanzado)
+- Realtime con Supabase Channels
+- Notificaciones push
+- Analytics por usuario/quiniela
+- Export PDF/Excel del leaderboard
+- Personalización visual avanzada (logo, colores, banner)
+- PWA (Progressive Web App)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Seguridad implementada
 
-## Deploy on Vercel
+- RLS en todas las tablas
+- Middleware Next.js protege rutas privadas y admin
+- Predicciones bloqueadas automáticamente via trigger al inicio del partido
+- Solo `super_admin` puede editar calendario y resultados
+- Solo el owner de la pool puede ver/editar configuración
+- Validación Zod client-side + constraints PostgreSQL server-side
+- Policies: usuarios no pueden ver quinielas privadas sin ser miembros
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Cálculo de puntos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Los puntos se calculan automáticamente vía trigger PostgreSQL cuando `matches.status` cambia a `'finished'`:
+
+1. `score_match_predictions(match_id)` — calcula puntos de cada predicción
+2. `recalculate_leaderboard(pool_id)` — actualiza snapshots y posiciones
+
+Fórmula (con reglas default):
+- Marcador exacto: **5 pts × multiplicador de fase**
+- Resultado correcto: **3 pts × multiplicador**
+- Diferencia de goles: **+1 pt**
+- Goles exactos de equipo: **+1 pt por equipo**
+- Multiplicadores: grupos×1, R32×1.5, R16×2, QF×2.5, SF×3, Final×4
