@@ -37,8 +37,8 @@ export function AppShell({ profile, children, currentPoolId, pendingRequests = 0
       {/* Main content */}
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <main className="flex-1 overflow-y-auto overscroll-none">
-          {/* bottom padding: 56px nav + safe area on mobile; normal on desktop */}
-          <div className="mx-auto max-w-6xl px-4 pt-5 pb-[calc(56px+env(safe-area-inset-bottom,0px)+1.5rem)] sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
+          {/* bottom padding: floating mobile nav + safe area; normal on desktop */}
+          <div className="mx-auto max-w-6xl px-4 pt-5 pb-[calc(72px+env(safe-area-inset-bottom,0px)+1.5rem)] sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
             {children}
           </div>
         </main>

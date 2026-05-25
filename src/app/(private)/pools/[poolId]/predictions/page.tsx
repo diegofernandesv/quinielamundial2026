@@ -57,14 +57,14 @@ export default async function PredictionsPage({ params }: { params: Promise<{ po
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Predicciones</h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 sm:text-base">
             {predicted}/{totalMatches} predicciones · {upcoming} partido{upcoming !== 1 ? 's' : ''} pendiente{upcoming !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start sm:self-auto">
           <Badge variant="info">{upcoming} por predecir</Badge>
         </div>
       </div>
@@ -77,14 +77,16 @@ export default async function PredictionsPage({ params }: { params: Promise<{ po
         />
       ) : (
         <Tabs defaultValue={defaultTab}>
-          <TabsList className="flex-wrap h-auto gap-1 mb-2">
-            {PHASE_LABELS.filter(p => grouped[p.value]).map(phase => (
-              <TabsTrigger key={phase.value} value={phase.value} className="text-xs">
-                {phase.short}
-                <span className="ml-1.5 opacity-60 text-xs">{grouped[phase.value]?.length ?? 0}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex h-auto min-w-max gap-1 whitespace-nowrap">
+              {PHASE_LABELS.filter(p => grouped[p.value]).map(phase => (
+                <TabsTrigger key={phase.value} value={phase.value} className="text-xs">
+                  {phase.short}
+                  <span className="ml-1.5 opacity-60 text-xs">{grouped[phase.value]?.length ?? 0}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {PHASE_LABELS.filter(p => grouped[p.value]).map(phase => (
             <TabsContent key={phase.value} value={phase.value}>

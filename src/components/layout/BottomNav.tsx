@@ -40,19 +40,20 @@ function TabItem({
   return (
     <Link
       href={href}
-      className="flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[44px] py-2 transition-colors"
+      className="group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-transform duration-200 active:scale-[0.98]"
     >
-      {/* Pill indicator wraps the icon — Material 3 Navigation Bar pattern */}
       <span className="relative">
         <span
           className={cn(
-            "flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200",
-            isActive ? "bg-primary/12 dark:bg-primary/20" : "bg-transparent"
+            "flex h-10 w-14 items-center justify-center rounded-2xl border transition-all duration-200",
+            isActive
+              ? "border-primary/15 bg-primary/12 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:border-primary/10 dark:bg-primary/20"
+              : "border-transparent bg-transparent group-hover:bg-muted/60"
           )}
         >
           <Icon
             className={cn(
-              "size-6 transition-colors duration-200",
+              "size-[1.35rem] transition-colors duration-200",
               isActive ? "text-primary" : "text-muted-foreground"
             )}
             strokeWidth={isActive ? 2.25 : 1.75}
@@ -66,7 +67,7 @@ function TabItem({
       </span>
       <span
         className={cn(
-          "text-[11px] leading-none font-medium transition-colors duration-200",
+          "max-w-full truncate text-[10px] leading-none font-medium tracking-[0.01em] transition-colors duration-200",
           isActive ? "text-primary" : "text-muted-foreground"
         )}
       >
@@ -90,10 +91,9 @@ function MainBottomNav({ profile, pathname, pendingRequests }: { profile: Profil
   return (
     <nav
       aria-label="Navegación principal"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-background border-t border-border"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-safe pt-2 lg:hidden"
     >
-      <div className="flex items-stretch h-14">
+      <div className="mx-auto flex h-18 max-w-md items-stretch rounded-[1.75rem] border border-border/70 bg-background/92 px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/78 dark:shadow-[0_-12px_36px_rgba(0,0,0,0.28)]">
         {items.map((item) => (
           <TabItem
             key={item.href}
@@ -122,10 +122,9 @@ function PoolBottomNav({ poolId, pathname }: { poolId: string; pathname: string 
   return (
     <nav
       aria-label="Navegación de quiniela"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-background border-t border-border"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-safe pt-2 lg:hidden"
     >
-      <div className="flex items-stretch h-14">
+      <div className="mx-auto flex h-18 max-w-md items-stretch rounded-[1.75rem] border border-border/70 bg-background/92 px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/78 dark:shadow-[0_-12px_36px_rgba(0,0,0,0.28)]">
         {items.map((item) => (
           <TabItem
             key={item.href}

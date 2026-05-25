@@ -78,51 +78,53 @@ export default async function PoolPage({ params }: { params: Promise<{ poolId: s
   return (
     <div className="space-y-6">
       {/* Pool header */}
-      <div className="rounded-2xl border bg-card p-6"
+      <div className="rounded-2xl border bg-card p-4 sm:p-6"
         style={{ borderColor: pool.primary_color + '40' }}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="flex size-14 items-center justify-center rounded-xl text-3xl shrink-0"
-              style={{ backgroundColor: pool.primary_color + '20' }}>
-              {pool.logo_url
-                ? <img src={pool.logo_url} alt="" className="size-12 rounded-lg object-cover" />
-                : '🏆'
-              }
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold">{pool.name}</h1>
-                <Badge variant={pool.privacy === 'public' ? 'info' : 'secondary'}>
-                  {pool.privacy === 'public' ? 'Pública' : 'Privada'}
-                </Badge>
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl text-2xl sm:size-14 sm:text-3xl"
+                style={{ backgroundColor: pool.primary_color + '20' }}>
+                {pool.logo_url
+                  ? <img src={pool.logo_url} alt="" className="size-12 rounded-lg object-cover" />
+                  : '🏆'
+                }
               </div>
-              {pool.description && <p className="text-sm text-muted-foreground mt-1 max-w-lg">{pool.description}</p>}
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1"><UsersIcon className="size-3.5" /> {memberCount ?? 0} participantes</span>
-                <span className="flex items-center gap-1"><CalendarIcon className="size-3.5" />
-                  Creada {format(new Date(pool.created_at), 'd MMM yyyy', { locale: es })}
-                </span>
-                {pool.join_deadline && (
-                  <span className="flex items-center gap-1">
-                    Cierra {format(new Date(pool.join_deadline), 'd MMM', { locale: es })}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                  <h1 className="break-words text-2xl font-bold leading-tight tracking-tight sm:text-xl">{pool.name}</h1>
+                  <Badge variant={pool.privacy === 'public' ? 'info' : 'secondary'} className="shrink-0">
+                    {pool.privacy === 'public' ? 'Pública' : 'Privada'}
+                  </Badge>
+                </div>
+                {pool.description && <p className="mt-1 max-w-lg text-sm text-muted-foreground">{pool.description}</p>}
+                <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:flex sm:flex-wrap sm:items-center sm:gap-4">
+                  <span className="flex items-center gap-1.5"><UsersIcon className="size-3.5 shrink-0" /> {memberCount ?? 0} participantes</span>
+                  <span className="flex items-center gap-1.5"><CalendarIcon className="size-3.5 shrink-0" />
+                    Creada {format(new Date(pool.created_at), 'd MMM yyyy', { locale: es })}
                   </span>
-                )}
+                  {pool.join_deadline && (
+                    <span className="flex items-center gap-1.5">
+                      Cierra {format(new Date(pool.join_deadline), 'd MMM', { locale: es })}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/pools/${poolId}/settings#invite`}>
-                <Share2Icon className="size-3.5 mr-1.5" /> Invitar
-              </Link>
-            </Button>
-            {isOwner && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/pools/${poolId}/settings`}>
-                  <SettingsIcon className="size-3.5 mr-1.5" /> Ajustes
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0">
+              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+                <Link href={`/pools/${poolId}/settings#invite`}>
+                  <Share2Icon className="size-3.5 mr-1.5" /> Invitar
                 </Link>
               </Button>
-            )}
+              {isOwner && (
+                <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+                  <Link href={`/pools/${poolId}/settings`}>
+                    <SettingsIcon className="size-3.5 mr-1.5" /> Ajustes
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -130,12 +132,12 @@ export default async function PoolPage({ params }: { params: Promise<{ poolId: s
         {myLeaderboard && (
           <>
             <Separator className="my-4" />
-            <div className="flex items-center gap-6">
-              <div>
+            <div className="grid grid-cols-2 gap-4 sm:flex sm:items-center sm:gap-6">
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Mis puntos</p>
                 <p className="text-2xl font-bold">{myLeaderboard.total_points}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Posición</p>
                 <p className="text-2xl font-bold">#{myLeaderboard.position ?? '—'}</p>
               </div>

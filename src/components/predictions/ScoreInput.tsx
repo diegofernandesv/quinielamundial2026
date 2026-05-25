@@ -18,16 +18,16 @@ export function ScoreInput({ value, onChange, disabled, className }: ScoreInputP
   }
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-1.5", className)}>
       <Button
         type="button"
         variant="outline"
         size="icon-sm"
         onClick={() => onChange(Math.max(0, value - 1))}
         disabled={disabled || value <= 0}
-        className="shrink-0"
+        className="size-10 shrink-0 sm:size-7"
       >
-        <MinusIcon className="size-3" />
+        <MinusIcon className="size-3.5" />
       </Button>
       <Input
         type="number"
@@ -36,7 +36,7 @@ export function ScoreInput({ value, onChange, disabled, className }: ScoreInputP
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        className="w-12 text-center font-bold text-lg p-0 h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="h-10 w-14 p-0 text-center text-lg font-bold [appearance:textfield] sm:h-9 sm:w-12 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <Button
         type="button"
@@ -44,9 +44,9 @@ export function ScoreInput({ value, onChange, disabled, className }: ScoreInputP
         size="icon-sm"
         onClick={() => onChange(Math.min(20, value + 1))}
         disabled={disabled || value >= 20}
-        className="shrink-0"
+        className="size-10 shrink-0 sm:size-7"
       >
-        <PlusIcon className="size-3" />
+        <PlusIcon className="size-3.5" />
       </Button>
     </div>
   )

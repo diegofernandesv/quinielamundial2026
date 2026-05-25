@@ -67,31 +67,32 @@ export function MatchPredictionCard({ match, prediction, poolId, userId }: Match
 
   return (
     <Card className={cn("transition-all", isLocked && "opacity-90")}>
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 text-xs text-muted-foreground">
+            <span className="block sm:inline">
               {format(new Date(match.scheduled_at), "EEE d MMM · HH:mm", { locale: es })}
             </span>
-            {match.city && <span className="text-xs text-muted-foreground">· {match.city}</span>}
+            {match.city && <span className="mt-0.5 block truncate sm:mt-0 sm:ml-2 sm:inline">{match.city}</span>}
           </div>
-          <div className={cn("flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", badgeClass)}>
+          <div className={cn("flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", badgeClass)}>
             <StatusIcon className="size-3" />
             {label}
           </div>
         </div>
 
         {/* Match */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-3">
           {/* Home team */}
-          <div className="flex-1 flex flex-col items-end gap-1">
-            <span className="text-sm font-semibold text-right">{match.home_team?.name ?? 'Por definir'}</span>
-            <span className="text-lg">{match.home_team?.flag_emoji ?? '🏳'}</span>
+          <div className="flex items-center justify-between gap-3 sm:flex-1 sm:flex-col sm:items-end sm:justify-center sm:gap-1">
+            <span className="text-lg sm:hidden">{match.home_team?.flag_emoji ?? '🏳'}</span>
+            <span className="text-sm font-semibold sm:text-right">{match.home_team?.name ?? 'Por definir'}</span>
+            <span className="hidden text-lg sm:block">{match.home_team?.flag_emoji ?? '🏳'}</span>
           </div>
 
           {/* Score inputs / result */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
+          <div className="flex shrink-0 flex-col items-center gap-2 self-center">
             {match.status === 'finished' ? (
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{match.home_goals}</span>
@@ -108,33 +109,34 @@ export function MatchPredictionCard({ match, prediction, poolId, userId }: Match
 
             {/* Prediction vs real */}
             {prediction && match.status === 'finished' && (
-              <div className="text-xs text-muted-foreground">
+              <div className="text-center text-xs text-muted-foreground">
                 Tu pred: <span className="font-medium text-foreground">{prediction.predicted_home_goals} - {prediction.predicted_away_goals}</span>
               </div>
             )}
           </div>
 
           {/* Away team */}
-          <div className="flex-1 flex flex-col items-start gap-1">
+          <div className="flex items-center justify-between gap-3 sm:flex-1 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
+            <span className="hidden text-lg sm:block">{match.away_team?.flag_emoji ?? '🏳'}</span>
             <span className="text-sm font-semibold">{match.away_team?.name ?? 'Por definir'}</span>
-            <span className="text-lg">{match.away_team?.flag_emoji ?? '🏳'}</span>
+            <span className="text-lg sm:hidden">{match.away_team?.flag_emoji ?? '🏳'}</span>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t">
+        <div className="mt-3 flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-muted-foreground">
             {match.phase !== 'group' && <Badge variant="outline" className="text-xs">{match.round_label ?? match.phase}</Badge>}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             {pointsEarned !== null && pointsEarned !== undefined && (
               <span className={cn("text-sm font-bold", pointsEarned > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
                 {pointsEarned > 0 ? '+' : ''}{pointsEarned} pts
               </span>
             )}
             {!isLocked && (
-              <Button size="sm" onClick={savePrediction} disabled={saving}>
+              <Button size="sm" onClick={savePrediction} disabled={saving} className="h-10 w-full sm:h-7 sm:w-auto">
                 {saving ? <Loader2Icon className="size-3.5 animate-spin mr-1.5" /> : <SaveIcon className="size-3.5 mr-1.5" />}
                 Guardar
               </Button>
