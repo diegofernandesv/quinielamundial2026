@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -31,6 +32,7 @@ const statusConfig = {
 }
 
 export function AccessRequestsClient({ requests }: { requests: Request[] }) {
+  const router = useRouter()
   const [loading, setLoading] = useState<Record<string, 'approve' | 'reject' | null>>({})
 
   async function handleApprove(id: string) {
@@ -39,6 +41,7 @@ export function AccessRequestsClient({ requests }: { requests: Request[] }) {
     setLoading(prev => ({ ...prev, [id]: null }))
     if (error) { toast.error(error); return }
     toast.success('Usuario aprobado — ya puede crear quinielas')
+    router.refresh()
   }
 
   async function handleReject(id: string) {
@@ -47,6 +50,7 @@ export function AccessRequestsClient({ requests }: { requests: Request[] }) {
     setLoading(prev => ({ ...prev, [id]: null }))
     if (error) { toast.error(error); return }
     toast.success('Solicitud rechazada')
+    router.refresh()
   }
 
   const pending  = requests.filter(r => r.status === 'pending')

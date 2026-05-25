@@ -34,7 +34,7 @@ export default async function PoolsPage() {
   ])
 
   const pools = (memberPoolsResult.data?.map((m: any) => m.pool).filter(Boolean) ?? []) as Pool[]
-  const isAdmin = profileResult.data?.role === 'super_admin'
+  const isAdmin = profileResult.data?.role === 'super_admin' || profileResult.data?.role === 'pool_admin'
 
   return (
     <div className="space-y-6">

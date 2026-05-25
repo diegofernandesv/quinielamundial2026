@@ -28,7 +28,7 @@ export async function approveAccessRequest(requestId: string): Promise<{ error?:
   const admin = await createAdminClient()
   const { error: updateErr } = await admin
     .from('profiles')
-    .update({ role: 'super_admin' })
+    .update({ role: 'pool_admin' })
     .eq('id', request.user_id)
   if (updateErr) return { error: updateErr.message }
 

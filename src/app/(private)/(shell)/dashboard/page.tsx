@@ -41,7 +41,7 @@ export default async function DashboardPage() {
 
   const pools = (memberPoolsResult.data?.map((m: any) => m.pool).filter(Boolean) ?? []) as Pool[]
   const role = profileResult.data?.role
-  const isAdmin = role === 'super_admin'
+  const isAdmin = role === 'super_admin' || role === 'pool_admin'
   const isPending = role === 'pending_admin'
   const displayName = profileResult.data?.nickname ?? profileResult.data?.full_name ?? ''
 

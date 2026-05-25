@@ -13,7 +13,7 @@ export default async function NewPoolPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'super_admin') redirect('/pools')
+  if (profile?.role !== 'super_admin' && profile?.role !== 'pool_admin') redirect('/pools')
 
   return <NewPoolForm />
 }

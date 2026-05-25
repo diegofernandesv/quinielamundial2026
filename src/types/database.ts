@@ -1,4 +1,4 @@
-export type UserRole = 'player' | 'pending_admin' | 'super_admin'
+export type UserRole = 'player' | 'pending_admin' | 'pool_admin' | 'super_admin'
 export type MatchPhase = 'group' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'third_place' | 'final'
 export type MatchStatus = 'scheduled' | 'live' | 'finished'
 export type PoolPrivacy = 'public' | 'private'
