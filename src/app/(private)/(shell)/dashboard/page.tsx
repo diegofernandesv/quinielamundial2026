@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { TrophyIcon, CalendarIcon, BarChart3Icon, UsersIcon, PlusIcon, ArrowRightIcon } from 'lucide-react'
+import { TrophyIcon, CalendarIcon, BarChart3Icon, UsersIcon, PlusIcon, ArrowRightIcon, ClockIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StatCard } from '@/components/shared/StatsCards'
 import { PoolCard } from '@/components/pools/PoolCard'
@@ -14,47 +14,70 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Fetch pools the user belongs to
-  const { data: memberPools } = await supabase
-    .from('pool_members')
-    .select('pool:pools(*, owner:profiles(full_name, nickname, avatar_url))')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .limit(6)
+  const [memberPoolsResult, profileResult, leaderboardResult, upcomingResult] = await Promise.all([
+    supabase
+      .from('pool_members')
+      .select('pool:pools(*, owner:profiles(full_name, nickname, avatar_url))')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .limit(6),
+    supabase
+      .from('profiles')
+      .select('role, full_name, nickname')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('leaderboard_snapshots')
+      .select('total_points, exact_scores')
+      .eq('user_id', user.id),
+    supabase
+      .from('matches')
+      .select('id, scheduled_at, home_team:teams!matches_home_team_id_fkey(name, flag_emoji), away_team:teams!matches_away_team_id_fkey(name, flag_emoji)')
+      .eq('status', 'scheduled')
+      .gte('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(3),
+  ])
 
-  const pools = (memberPools?.map((m: any) => m.pool).filter(Boolean) ?? []) as Pool[]
+  const pools = (memberPoolsResult.data?.map((m: any) => m.pool).filter(Boolean) ?? []) as Pool[]
+  const role = profileResult.data?.role
+  const isAdmin = role === 'super_admin'
+  const isPending = role === 'pending_admin'
+  const displayName = profileResult.data?.nickname ?? profileResult.data?.full_name ?? ''
 
-  // User leaderboard positions
-  const { data: leaderboard } = await supabase
-    .from('leaderboard_snapshots')
-    .select('total_points, exact_scores, pool_id')
-    .eq('user_id', user.id)
-
-  const totalPoints = leaderboard?.reduce((sum, l) => sum + (l.total_points ?? 0), 0) ?? 0
-  const totalExact = leaderboard?.reduce((sum, l) => sum + (l.exact_scores ?? 0), 0) ?? 0
-
-  // Upcoming matches
-  const { data: upcomingMatches } = await supabase
-    .from('matches')
-    .select('id, scheduled_at, home_team:teams!matches_home_team_id_fkey(name, flag_emoji), away_team:teams!matches_away_team_id_fkey(name, flag_emoji)')
-    .eq('status', 'scheduled')
-    .gte('scheduled_at', new Date().toISOString())
-    .order('scheduled_at', { ascending: true })
-    .limit(3)
+  const totalPoints = leaderboardResult.data?.reduce((s, l) => s + (l.total_points ?? 0), 0) ?? 0
+  const totalExact = leaderboardResult.data?.reduce((s, l) => s + (l.exact_scores ?? 0), 0) ?? 0
+  const upcomingMatches = upcomingResult.data ?? []
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Hola{displayName ? `, ${displayName}` : ''} 👋
+        </h1>
         <p className="text-muted-foreground mt-1">Bienvenido al Mundial 2026</p>
       </div>
 
+      {/* Pending admin approval banner */}
+      {isPending && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+          <ClockIcon className="size-5 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Solicitud de administrador pendiente</p>
+            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+              Tu cuenta está esperando aprobación. Una vez aprobado podrás crear y gestionar quinielas.
+              Mientras tanto puedes unirte a quinielas existentes con un código.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Mis Quinielas" value={pools.length} icon={TrophyIcon} subtitle="activas" />
-        <StatCard title="Puntos Totales" value={totalPoints} icon={BarChart3Icon} subtitle="acumulados" />
-        <StatCard title="Marcadores Exactos" value={totalExact} icon={CalendarIcon} subtitle="predicciones" />
-        <StatCard title="Próximos Partidos" value={upcomingMatches?.length ?? 0} icon={UsersIcon} subtitle="para predecir" />
+        <StatCard title="Mis Quinielas"      value={pools.length}      icon={TrophyIcon}    subtitle="activas" />
+        <StatCard title="Puntos Totales"     value={totalPoints}       icon={BarChart3Icon} subtitle="acumulados" />
+        <StatCard title="Marcadores Exactos" value={totalExact}        icon={CalendarIcon}  subtitle="predicciones" />
+        <StatCard title="Próximos Partidos"  value={upcomingMatches.length} icon={UsersIcon} subtitle="para predecir" />
       </div>
 
       {/* My pools */}
@@ -67,11 +90,13 @@ export default async function DashboardPage() {
                 Ver todas <ArrowRightIcon className="ml-1.5 size-3.5" />
               </Link>
             </Button>
-            <Button asChild size="sm">
-              <Link href="/pools/new">
-                <PlusIcon className="mr-1.5 size-3.5" /> Nueva
-              </Link>
-            </Button>
+            {isAdmin && (
+              <Button asChild size="sm">
+                <Link href="/pools/new">
+                  <PlusIcon className="mr-1.5 size-3.5" /> Nueva
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -86,8 +111,12 @@ export default async function DashboardPage() {
           <EmptyState
             icon={TrophyIcon}
             title="Aún no tienes quinielas"
-            description="Crea una quiniela o únete con un código de invitación."
-            action={{ label: 'Crear quiniela', href: '/pools/new' }}
+            description={
+              isAdmin
+                ? 'Crea tu primera quiniela o únete a una con un código.'
+                : 'Únete a una quiniela con el código que te compartió el administrador.'
+            }
+            action={isAdmin ? { label: 'Crear quiniela', href: '/pools/new' } : undefined}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -97,7 +126,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Upcoming matches */}
-      {upcomingMatches && upcomingMatches.length > 0 && (
+      {upcomingMatches.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4">Próximos Partidos</h2>
           <div className="grid gap-3">
