@@ -40,9 +40,10 @@ interface SidebarContentProps {
   currentPoolId?: string
   onLogout: () => void
   onClose?: () => void
+  pendingRequests?: number
 }
 
-export function SidebarContent({ profile, currentPoolId, onLogout, onClose }: SidebarContentProps) {
+export function SidebarContent({ profile, currentPoolId, onLogout, onClose, pendingRequests = 0 }: SidebarContentProps) {
   const pathname = usePathname()
 
   return (
@@ -100,6 +101,7 @@ export function SidebarContent({ profile, currentPoolId, onLogout, onClose }: Si
                 item={{ label: 'Solicitudes', href: '/admin/access-requests', icon: InboxIcon }}
                 pathname={pathname}
                 onClick={onClose}
+                badge={pendingRequests}
               />
             </nav>
           </>
@@ -123,7 +125,17 @@ export function SidebarContent({ profile, currentPoolId, onLogout, onClose }: Si
   )
 }
 
-function SidebarLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
+function SidebarLink({
+  item,
+  pathname,
+  onClick,
+  badge = 0,
+}: {
+  item: NavItem
+  pathname: string
+  onClick?: () => void
+  badge?: number
+}) {
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
   const Icon = item.icon
   return (
@@ -138,7 +150,12 @@ function SidebarLink({ item, pathname, onClick }: { item: NavItem; pathname: str
       )}
     >
       <Icon className="size-4 shrink-0" />
-      {item.label}
+      <span className="flex-1">{item.label}</span>
+      {badge > 0 && (
+        <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[11px] font-semibold leading-none">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </Link>
   )
 }

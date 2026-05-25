@@ -9,9 +9,10 @@ interface AppShellProps {
   profile: Profile
   children: React.ReactNode
   currentPoolId?: string
+  pendingRequests?: number
 }
 
-export function AppShell({ profile, children, currentPoolId }: AppShellProps) {
+export function AppShell({ profile, children, currentPoolId, pendingRequests = 0 }: AppShellProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -29,6 +30,7 @@ export function AppShell({ profile, children, currentPoolId }: AppShellProps) {
           profile={profile}
           currentPoolId={currentPoolId}
           onLogout={handleLogout}
+          pendingRequests={pendingRequests}
         />
       </aside>
 
@@ -43,7 +45,7 @@ export function AppShell({ profile, children, currentPoolId }: AppShellProps) {
       </div>
 
       {/* Mobile bottom nav */}
-      <BottomNav profile={profile} currentPoolId={currentPoolId} />
+      <BottomNav profile={profile} currentPoolId={currentPoolId} pendingRequests={pendingRequests} />
     </div>
   )
 }

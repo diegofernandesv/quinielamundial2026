@@ -11,15 +11,16 @@ import type { Profile } from '@/types/database'
 interface BottomNavProps {
   profile: Profile
   currentPoolId?: string
+  pendingRequests?: number
 }
 
-export function BottomNav({ profile, currentPoolId }: BottomNavProps) {
+export function BottomNav({ profile, currentPoolId, pendingRequests = 0 }: BottomNavProps) {
   const pathname = usePathname()
 
   if (currentPoolId) {
     return <PoolBottomNav poolId={currentPoolId} pathname={pathname} />
   }
-  return <MainBottomNav profile={profile} pathname={pathname} />
+  return <MainBottomNav profile={profile} pathname={pathname} pendingRequests={pendingRequests} />
 }
 
 /* ─── Shared tab item ───────────────────────────────────────────────────────── */
@@ -28,34 +29,40 @@ function TabItem({
   icon: Icon,
   label,
   isActive,
+  badge = 0,
 }: {
   href: string
   icon: React.ElementType
   label: string
   isActive: boolean
+  badge?: number
 }) {
   return (
     <Link
       href={href}
-      /* 44 px minimum touch target (Apple HIG / WCAG 2.5.5) */
       className="flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[44px] py-2 transition-colors"
     >
       {/* Pill indicator wraps the icon — Material 3 Navigation Bar pattern */}
-      <span
-        className={cn(
-          "flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200",
-          isActive
-            ? "bg-primary/12 dark:bg-primary/20"
-            : "bg-transparent"
-        )}
-      >
-        <Icon
+      <span className="relative">
+        <span
           className={cn(
-            "size-6 transition-colors duration-200",
-            isActive ? "text-primary" : "text-muted-foreground"
+            "flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200",
+            isActive ? "bg-primary/12 dark:bg-primary/20" : "bg-transparent"
           )}
-          strokeWidth={isActive ? 2.25 : 1.75}
-        />
+        >
+          <Icon
+            className={cn(
+              "size-6 transition-colors duration-200",
+              isActive ? "text-primary" : "text-muted-foreground"
+            )}
+            strokeWidth={isActive ? 2.25 : 1.75}
+          />
+        </span>
+        {badge > 0 && (
+          <span className="absolute -top-0.5 right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
       </span>
       <span
         className={cn(
@@ -70,13 +77,13 @@ function TabItem({
 }
 
 /* ─── Main nav (outside pool) ───────────────────────────────────────────────── */
-function MainBottomNav({ profile, pathname }: { profile: Profile; pathname: string }) {
+function MainBottomNav({ profile, pathname, pendingRequests }: { profile: Profile; pathname: string; pendingRequests: number }) {
   const items = [
-    { href: '/dashboard', icon: LayoutDashboardIcon, label: 'Inicio' },
-    { href: '/pools',     icon: TrophyIcon,           label: 'Quinielas' },
-    { href: '/profile',   icon: UserIcon,             label: 'Perfil' },
+    { href: '/dashboard', icon: LayoutDashboardIcon, label: 'Inicio',    badge: 0 },
+    { href: '/pools',     icon: TrophyIcon,           label: 'Quinielas', badge: 0 },
+    { href: '/profile',   icon: UserIcon,             label: 'Perfil',    badge: 0 },
     ...(profile.role === 'super_admin'
-      ? [{ href: '/admin', icon: ShieldIcon, label: 'Admin' }]
+      ? [{ href: '/admin', icon: ShieldIcon, label: 'Admin', badge: pendingRequests }]
       : []),
   ]
 
@@ -94,6 +101,7 @@ function MainBottomNav({ profile, pathname }: { profile: Profile; pathname: stri
             icon={item.icon}
             label={item.label}
             isActive={pathname === item.href || pathname.startsWith(item.href + '/')}
+            badge={item.badge}
           />
         ))}
       </div>
@@ -104,11 +112,11 @@ function MainBottomNav({ profile, pathname }: { profile: Profile; pathname: stri
 /* ─── Pool nav (inside pool) ────────────────────────────────────────────────── */
 function PoolBottomNav({ poolId, pathname }: { poolId: string; pathname: string }) {
   const items = [
-    { href: `/pools/${poolId}/leaderboard`, icon: BarChart3Icon, label: 'Tabla',    exact: false },
-    { href: `/pools/${poolId}/predictions`, icon: CalendarIcon,  label: 'Picks',    exact: false },
-    { href: '/pools',                       icon: HomeIcon,       label: 'Inicio',   exact: true  },
-    { href: `/pools/${poolId}/groups`,      icon: UsersIcon,      label: 'Grupos',   exact: false },
-    { href: `/pools/${poolId}/bracket`,     icon: TrophyIcon,     label: 'Bracket',  exact: false },
+    { href: `/pools/${poolId}/leaderboard`, icon: BarChart3Icon, label: 'Tabla',   exact: false },
+    { href: `/pools/${poolId}/predictions`, icon: CalendarIcon,  label: 'Picks',   exact: false },
+    { href: '/pools',                       icon: HomeIcon,       label: 'Inicio',  exact: true  },
+    { href: `/pools/${poolId}/groups`,      icon: UsersIcon,      label: 'Grupos',  exact: false },
+    { href: `/pools/${poolId}/bracket`,     icon: TrophyIcon,     label: 'Bracket', exact: false },
   ]
 
   return (

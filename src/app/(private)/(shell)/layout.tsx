@@ -9,5 +9,19 @@ export default async function ShellLayout({ children }: { children: React.ReactN
   if (!user) redirect('/login')
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if (!profile) redirect('/login')
-  return <AppShell profile={profile as Profile}>{children}</AppShell>
+
+  let pendingRequests = 0
+  if (profile.role === 'super_admin') {
+    const { count } = await supabase
+      .from('pool_access_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    pendingRequests = count ?? 0
+  }
+
+  return (
+    <AppShell profile={profile as Profile} pendingRequests={pendingRequests}>
+      {children}
+    </AppShell>
+  )
 }
