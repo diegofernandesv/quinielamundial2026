@@ -90,7 +90,10 @@ export function LeaderboardTable({ entries, currentUserId, poolName }: Leaderboa
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
-                      <UserAvatar profile={entry.profile} size="sm" />
+                      <UserAvatar
+                        profile={entry.profile ?? { full_name: 'Usuario', nickname: null, avatar_url: null }}
+                        size="sm"
+                      />
                       <div className="min-w-0">
                         <p className={cn("text-sm font-medium truncate", isCurrentUser && "text-primary")}>
                           {entry.profile?.nickname ?? entry.profile?.full_name ?? 'Usuario'}
