@@ -4,6 +4,7 @@ import { TrophyIcon, CalendarIcon, BarChart3Icon, UsersIcon, PlusIcon, ArrowRigh
 import { createClient } from '@/lib/supabase/server'
 import { StatCard } from '@/components/shared/StatsCards'
 import { PoolCard } from '@/components/pools/PoolCard'
+import { JoinByCodeCard } from '@/components/pools/JoinByCodeCard'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
 import type { Pool } from '@/types/database'
@@ -72,6 +73,13 @@ export default async function DashboardPage() {
               </Link>
             </Button>
           </div>
+        </div>
+
+        <div className="mb-4">
+          <JoinByCodeCard
+            title="Entrar con código"
+            description="Si alguien te compartió un código, pégalo aquí para abrir la invitación."
+          />
         </div>
 
         {pools.length === 0 ? (

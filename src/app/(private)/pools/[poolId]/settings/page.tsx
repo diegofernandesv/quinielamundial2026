@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -18,8 +18,8 @@ import { InviteMemberDialog } from '@/components/pools/InviteMemberDialog'
 import { Separator } from '@/components/ui/separator'
 import type { Pool, ScoringRules, PoolMember } from '@/types/database'
 
-export default function PoolSettingsPage({ params }: { params: { poolId: string } }) {
-  const poolId = params.poolId
+export default function PoolSettingsPage({ params }: { params: Promise<{ poolId: string }> }) {
+  const { poolId } = use(params)
   const [pool, setPool] = useState<Pool | null>(null)
   const [rules, setRules] = useState<ScoringRules | null>(null)
   const [members, setMembers] = useState<PoolMember[]>([])

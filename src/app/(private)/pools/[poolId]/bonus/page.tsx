@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -15,8 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { isDeadlinePassed } from '@/lib/utils/format'
 import type { Team, Pool, BonusPrediction } from '@/types/database'
 
-export default function BonusPage({ params }: { params: { poolId: string } }) {
-  const poolId = params.poolId
+export default function BonusPage({ params }: { params: Promise<{ poolId: string }> }) {
+  const { poolId } = use(params)
   const [teams, setTeams] = useState<Team[]>([])
   const [pool, setPool] = useState<Pool | null>(null)
   const [existing, setExisting] = useState<BonusPrediction | null>(null)

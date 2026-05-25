@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PlusIcon, SearchIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PoolCard } from '@/components/pools/PoolCard'
+import { JoinByCodeCard } from '@/components/pools/JoinByCodeCard'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { TrophyIcon } from 'lucide-react'
@@ -45,6 +46,8 @@ export default async function PoolsPage() {
           </Button>
         </div>
       </div>
+
+      <JoinByCodeCard />
 
       {pools.length === 0 ? (
         <EmptyState

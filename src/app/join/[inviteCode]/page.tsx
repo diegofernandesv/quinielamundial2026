@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2Icon, TrophyIcon, UsersIcon } from 'lucide-react'
@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import type { Pool } from '@/types/database'
 
-export default function JoinPage({ params }: { params: { inviteCode: string } }) {
-  const inviteCode = params.inviteCode
+export default function JoinPage({ params }: { params: Promise<{ inviteCode: string }> }) {
+  const { inviteCode } = use(params)
   const router = useRouter()
   const [pool, setPool] = useState<Pool | null>(null)
   const [loading, setLoading] = useState(true)
