@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboardIcon, TrophyIcon, UserIcon, ShieldIcon,
-  BarChart3Icon, CalendarIcon, UsersIcon, HomeIcon,
+  BarChart3Icon, CalendarIcon, UsersIcon, HomeIcon, WalletIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types/database'
@@ -112,11 +112,11 @@ function MainBottomNav({ profile, pathname, pendingRequests }: { profile: Profil
 /* ─── Pool nav (inside pool) ────────────────────────────────────────────────── */
 function PoolBottomNav({ poolId, pathname }: { poolId: string; pathname: string }) {
   const items = [
-    { href: `/pools/${poolId}/leaderboard`, icon: BarChart3Icon, label: 'Tabla',   exact: false },
-    { href: `/pools/${poolId}/predictions`, icon: CalendarIcon,  label: 'Picks',   exact: false },
-    { href: '/pools',                       icon: HomeIcon,       label: 'Inicio',  exact: true  },
-    { href: `/pools/${poolId}/groups`,      icon: UsersIcon,      label: 'Grupos',  exact: false },
-    { href: `/pools/${poolId}/bracket`,     icon: TrophyIcon,     label: 'Bracket', exact: false },
+    { href: `/pools/${poolId}/leaderboard`, icon: BarChart3Icon, label: 'Tabla',  exact: false },
+    { href: `/pools/${poolId}/predictions`, icon: CalendarIcon,  label: 'Picks',  exact: false },
+    { href: '/pools',                       icon: HomeIcon,       label: 'Inicio', exact: true  },
+    { href: `/pools/${poolId}/payments`,    icon: WalletIcon,     label: 'Pagos',  exact: false },
+    { href: `/pools/${poolId}/groups`,      icon: UsersIcon,      label: 'Grupos', exact: false },
   ]
 
   return (

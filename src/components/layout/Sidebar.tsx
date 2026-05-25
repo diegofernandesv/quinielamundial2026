@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   TrophyIcon, LayoutDashboardIcon, UsersIcon, CalendarIcon,
   StarIcon, BarChart3Icon, ShieldIcon, XIcon, SettingsIcon, InboxIcon,
-  LogOutIcon, UserIcon
+  LogOutIcon, UserIcon, WalletIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,6 +26,7 @@ const poolNavItems = (poolId: string): NavItem[] => [
   { label: 'Bracket',       href: `/pools/${poolId}/bracket`,      icon: TrophyIcon },
   { label: 'Bonus',         href: `/pools/${poolId}/bonus`,        icon: StarIcon },
   { label: 'Reglas',        href: `/pools/${poolId}/rules`,        icon: ShieldIcon },
+  { label: 'Pagos',         href: `/pools/${poolId}/payments`,     icon: WalletIcon },
   { label: 'Configuración', href: `/pools/${poolId}/settings`,     icon: SettingsIcon },
 ]
 
