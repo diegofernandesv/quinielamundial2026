@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Loader2Icon, SaveIcon } from 'lucide-react'
+import { Loader2Icon, LogOutIcon, SaveIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,8 +22,10 @@ const profileSchema = z.object({
 type ProfileInput = z.infer<typeof profileSchema>
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const supabase = createClient()
 
   const form = useForm<ProfileInput>({
@@ -50,6 +53,18 @@ export default function ProfilePage() {
     setLoading(false)
     if (error) { toast.error(error.message); return }
     toast.success('Perfil actualizado')
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    const { error } = await supabase.auth.signOut()
+    setLoggingOut(false)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    router.push('/login')
+    router.refresh()
   }
 
   return (
@@ -105,6 +120,19 @@ export default function ProfilePage() {
               </Button>
             </form>
           </Form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sesión</CardTitle>
+          <CardDescription>Cierra tu sesión en este dispositivo</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={handleLogout} disabled={loggingOut} className="w-full sm:w-auto">
+            {loggingOut ? <Loader2Icon className="mr-2 size-4 animate-spin" /> : <LogOutIcon className="mr-2 size-4" />}
+            Cerrar sesión
+          </Button>
         </CardContent>
       </Card>
     </div>
