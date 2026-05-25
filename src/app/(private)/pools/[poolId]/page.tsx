@@ -4,13 +4,14 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
   CalendarIcon, BarChart3Icon, TrophyIcon, UsersIcon, StarIcon,
-  ShieldIcon, SettingsIcon, Share2Icon
+  ShieldIcon, SettingsIcon
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { InvitePoolButton } from '@/components/pools/InvitePoolButton'
 
 interface NavTileProps { href: string; icon: React.ElementType; label: string; desc: string }
 function NavTile({ href, icon: Icon, label, desc }: NavTileProps) {
@@ -112,11 +113,11 @@ export default async function PoolPage({ params }: { params: Promise<{ poolId: s
               </div>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0">
-              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-                <Link href={`/pools/${poolId}/settings#invite`}>
-                  <Share2Icon className="size-3.5 mr-1.5" /> Invitar
-                </Link>
-              </Button>
+              <InvitePoolButton
+                poolName={pool.name}
+                inviteCode={pool.invite_code}
+                className="w-full sm:w-auto"
+              />
               {isOwner && (
                 <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
                   <Link href={`/pools/${poolId}/settings`}>

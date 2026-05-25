@@ -25,7 +25,7 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', full_name: '', nickname: '' },
+    defaultValues: { email: '', password: '', full_name: '', nickname: '', invite_code: '' },
   })
 
   async function onSubmit(data: RegisterInput) {
@@ -54,7 +54,10 @@ export default function RegisterPage() {
     }
 
     setLoading(false)
-    router.push('/login')
+    const nextPath = data.invite_code?.trim()
+      ? `/join/${data.invite_code.trim().toUpperCase()}`
+      : '/dashboard'
+    router.push(`/login?next=${encodeURIComponent(nextPath)}`)
   }
 
   return (
@@ -147,6 +150,26 @@ export default function RegisterPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
+
+                {accountType === 'player' && (
+                  <FormField control={form.control} name="invite_code" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código de invitación</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Opcional · Ej: ABCD1234"
+                          autoCapitalize="characters"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="uppercase"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>Opcional. Si ya tienes código, te llevaremos directo a esa quiniela después de iniciar sesión.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                )}
 
                 <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading && <Loader2Icon className="mr-2 size-4 animate-spin" />}
