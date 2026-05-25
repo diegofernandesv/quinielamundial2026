@@ -616,8 +616,25 @@ returns bool language sql security definer stable as $$
   select exists(select 1 from pools where id = p_pool_id and owner_id = auth.uid());
 $$;
 
+create or replace function can_view_profile(p_profile_id uuid)
+returns bool language sql security definer stable as $$
+  select
+    auth.uid() = p_profile_id
+    or is_super_admin()
+    or exists(
+      select 1
+      from pool_members viewer_membership
+      join pool_members target_membership
+        on viewer_membership.pool_id = target_membership.pool_id
+      where viewer_membership.user_id = auth.uid()
+        and viewer_membership.is_active = true
+        and target_membership.user_id = p_profile_id
+        and target_membership.is_active = true
+    );
+$$;
+
 -- PROFILES
-create policy "profiles_select" on profiles for select using (auth.uid() = id or is_super_admin());
+create policy "profiles_select" on profiles for select using (can_view_profile(id));
 create policy "profiles_update" on profiles for update using (auth.uid() = id);
 create policy "profiles_insert" on profiles for insert with check (auth.uid() = id);
 
