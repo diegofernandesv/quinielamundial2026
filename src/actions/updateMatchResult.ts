@@ -10,14 +10,43 @@ export async function updateMatchResult(matchId: string, data: unknown) {
   const { data: { user } } = await userClient.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { data: profile } = await userClient.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile } = await userClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
   if (!profile || !['super_admin', 'pool_admin'].includes(profile.role)) {
     return { error: 'Sin permisos' }
   }
 
   const admin = await createAdminClient()
 
-  // Get current match status before updating
+  // Call the atomic SQL function — handles scoring, revert, and leaderboard
+  // in a single transaction with SECURITY DEFINER (bypasses RLS).
+  const { data: result, error } = await admin.rpc('admin_update_match_result', {
+    p_match_id:   matchId,
+    p_status:     parsed.data.status,
+    p_home_goals: parsed.data.home_goals ?? null,
+    p_away_goals: parsed.data.away_goals ?? null,
+  })
+
+  if (error) {
+    // admin_update_match_result function not yet deployed — fall back to direct updates
+    return await fallbackUpdateMatchResult(admin, matchId, parsed.data)
+  }
+
+  if (result?.error) return { error: result.error as string }
+
+  return { success: true }
+}
+
+// Fallback for when the SQL function hasn't been deployed yet.
+// Run fix-leaderboard-ambiguity.sql in Supabase Dashboard to enable the primary path.
+async function fallbackUpdateMatchResult(
+  admin: Awaited<ReturnType<typeof createAdminClient>>,
+  matchId: string,
+  data: { status: string; home_goals: number; away_goals: number }
+) {
   const { data: current } = await admin
     .from('matches')
     .select('status')
@@ -25,57 +54,57 @@ export async function updateMatchResult(matchId: string, data: unknown) {
     .single()
 
   const wasFinished = current?.status === 'finished'
-  const isNowFinished = parsed.data.status === 'finished'
-  const isReverting = wasFinished && !isNowFinished
-
-  // When reverting finished → scheduled/live, clear goals so it's clean
-  const updatePayload = isReverting
-    ? { ...parsed.data, home_goals: null, away_goals: null }
-    : parsed.data
-
-  const { error: matchError } = await admin
-    .from('matches')
-    .update(updatePayload)
-    .eq('id', matchId)
-
-  if (matchError && !matchError.message.includes('ambiguous')) {
-    return { error: matchError.message }
-  }
+  const isReverting = wasFinished && data.status !== 'finished'
 
   if (isReverting) {
-    // Reset predictions: clear points, unlock, unscored
+    // Get pools BEFORE resetting predictions
+    const { data: poolRows } = await admin
+      .from('predictions')
+      .select('pool_id')
+      .eq('match_id', matchId)
+    const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
+
+    // Reset predictions
     await admin
       .from('predictions')
       .update({ points_earned: null, scored_at: null, is_locked: false })
       .eq('match_id', matchId)
 
-    // Get affected pools and recalculate leaderboard
-    const { data: poolRows } = await admin
-      .from('predictions')
-      .select('pool_id')
-      .eq('match_id', matchId)
-
-    const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
-    for (const poolId of distinctPools) {
-      const { error: lbErr } = await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
-      if (lbErr) return { error: `Leaderboard error: ${lbErr.message}` }
+    // Revert match — clear goals
+    const { error: matchError } = await admin
+      .from('matches')
+      .update({ status: data.status, home_goals: null, away_goals: null })
+      .eq('id', matchId)
+    if (matchError && !matchError.message.includes('ambiguous')) {
+      return { error: matchError.message }
     }
+
+    // Recalculate leaderboard
+    for (const poolId of distinctPools) {
+      await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
+    }
+    return { success: true }
   }
 
-  if (isNowFinished) {
-    // Score all predictions for this match
-    const { error: scoreErr } = await admin.rpc('score_match_predictions', { p_match_id: matchId })
-    if (scoreErr) return { error: `Score error: ${scoreErr.message}` }
+  // Normal update
+  const { error: matchError } = await admin
+    .from('matches')
+    .update(data)
+    .eq('id', matchId)
+  if (matchError && !matchError.message.includes('ambiguous')) {
+    return { error: matchError.message }
+  }
+
+  if (data.status === 'finished') {
+    await admin.rpc('score_match_predictions', { p_match_id: matchId })
 
     const { data: poolRows } = await admin
       .from('predictions')
       .select('pool_id')
       .eq('match_id', matchId)
-
     const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
     for (const poolId of distinctPools) {
-      const { error: lbErr } = await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
-      if (lbErr) return { error: `Leaderboard error: ${lbErr.message}` }
+      await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
     }
   }
 
