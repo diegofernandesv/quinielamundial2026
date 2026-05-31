@@ -131,13 +131,25 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold mb-4">Próximos Partidos</h2>
           <div className="grid gap-3">
             {upcomingMatches.map((match: any) => (
-              <div key={match.id} className="flex items-center justify-between rounded-xl border px-4 py-3">
-                <span className="text-sm font-medium">
-                  {match.home_team?.flag_emoji} {match.home_team?.name} vs {match.away_team?.flag_emoji} {match.away_team?.name}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(match.scheduled_at).toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </span>
+              <div key={match.id} className="flex items-center gap-2 rounded-xl border px-4 py-3">
+                {/* Home */}
+                <div className="flex flex-1 items-center justify-end gap-1.5 min-w-0">
+                  <span className="text-sm font-medium text-right truncate">{match.home_team?.name}</span>
+                  <span className="text-base shrink-0">{match.home_team?.flag_emoji}</span>
+                </div>
+                {/* Date in center */}
+                <div className="shrink-0 text-center">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(match.scheduled_at).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+                    {' · '}
+                    {new Date(match.scheduled_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {/* Away */}
+                <div className="flex flex-1 items-center justify-start gap-1.5 min-w-0">
+                  <span className="text-base shrink-0">{match.away_team?.flag_emoji}</span>
+                  <span className="text-sm font-medium truncate">{match.away_team?.name}</span>
+                </div>
               </div>
             ))}
           </div>

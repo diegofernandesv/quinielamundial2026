@@ -82,44 +82,46 @@ export function MatchPredictionCard({ match, prediction, poolId, userId }: Match
           </div>
         </div>
 
-        {/* Match */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-3">
-          {/* Home team */}
-          <div className="flex items-center justify-between gap-3 sm:flex-1 sm:flex-col sm:items-end sm:justify-center sm:gap-1">
-            <span className="text-lg sm:hidden">{match.home_team?.flag_emoji ?? '🏳'}</span>
-            <span className="text-sm font-semibold sm:text-right">{match.home_team?.name ?? 'Por definir'}</span>
-            <span className="hidden text-lg sm:block">{match.home_team?.flag_emoji ?? '🏳'}</span>
+        {/* Match — always a single row: [flag name] [score] [name flag] */}
+        <div className="flex items-center gap-2">
+          {/* Home team — flag + name, right-aligned */}
+          <div className="flex flex-1 items-center justify-end gap-1.5 min-w-0">
+            <span className="text-sm font-semibold text-right leading-tight truncate">
+              {match.home_team?.name ?? 'Por definir'}
+            </span>
+            <span className="text-xl shrink-0">{match.home_team?.flag_emoji ?? '🏳'}</span>
           </div>
 
           {/* Score inputs / result */}
-          <div className="flex shrink-0 flex-col items-center gap-2 self-center">
+          <div className="flex shrink-0 flex-col items-center gap-1">
             {match.status === 'finished' ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span className="text-2xl font-bold">{match.home_goals}</span>
-                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground text-sm">—</span>
                 <span className="text-2xl font-bold">{match.away_goals}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <ScoreInput value={homeGoals} onChange={setHomeGoals} disabled={isLocked} />
-                <span className="text-muted-foreground font-bold">—</span>
+                <span className="text-muted-foreground font-bold text-sm">—</span>
                 <ScoreInput value={awayGoals} onChange={setAwayGoals} disabled={isLocked} />
               </div>
             )}
 
             {/* Prediction vs real */}
             {prediction && match.status === 'finished' && (
-              <div className="text-center text-xs text-muted-foreground">
-                Tu pred: <span className="font-medium text-foreground">{prediction.predicted_home_goals} - {prediction.predicted_away_goals}</span>
+              <div className="text-center text-xs text-muted-foreground whitespace-nowrap">
+                Tu pred: <span className="font-medium text-foreground">{prediction.predicted_home_goals}–{prediction.predicted_away_goals}</span>
               </div>
             )}
           </div>
 
-          {/* Away team */}
-          <div className="flex items-center justify-between gap-3 sm:flex-1 sm:flex-col sm:items-start sm:justify-center sm:gap-1">
-            <span className="hidden text-lg sm:block">{match.away_team?.flag_emoji ?? '🏳'}</span>
-            <span className="text-sm font-semibold">{match.away_team?.name ?? 'Por definir'}</span>
-            <span className="text-lg sm:hidden">{match.away_team?.flag_emoji ?? '🏳'}</span>
+          {/* Away team — flag + name, left-aligned */}
+          <div className="flex flex-1 items-center justify-start gap-1.5 min-w-0">
+            <span className="text-xl shrink-0">{match.away_team?.flag_emoji ?? '🏳'}</span>
+            <span className="text-sm font-semibold leading-tight truncate">
+              {match.away_team?.name ?? 'Por definir'}
+            </span>
           </div>
         </div>
 
