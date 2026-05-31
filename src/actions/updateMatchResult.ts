@@ -17,39 +17,65 @@ export async function updateMatchResult(matchId: string, data: unknown) {
 
   const admin = await createAdminClient()
 
-  // Update match — the DB trigger handle_match_finished fires automatically,
-  // but it currently has a bug (ambiguous 'id' in recalculate_leaderboard CTE).
-  // We call scoring/leaderboard explicitly here so it works regardless.
+  // Get current match status before updating
+  const { data: current } = await admin
+    .from('matches')
+    .select('status')
+    .eq('id', matchId)
+    .single()
+
+  const wasFinished = current?.status === 'finished'
+  const isNowFinished = parsed.data.status === 'finished'
+  const isReverting = wasFinished && !isNowFinished
+
+  // When reverting finished → scheduled/live, clear goals so it's clean
+  const updatePayload = isReverting
+    ? { ...parsed.data, home_goals: null, away_goals: null }
+    : parsed.data
+
   const { error: matchError } = await admin
     .from('matches')
-    .update(parsed.data)
+    .update(updatePayload)
     .eq('id', matchId)
 
-  // If the trigger bug causes the update to fail, report it but still try scoring
   if (matchError && !matchError.message.includes('ambiguous')) {
     return { error: matchError.message }
   }
 
-  if (parsed.data.status === 'finished') {
-    // Score all predictions for this match
-    await admin.rpc('score_match_predictions', { p_match_id: matchId })
+  if (isReverting) {
+    // Reset predictions: clear points, unlock, unscored
+    await admin
+      .from('predictions')
+      .update({ points_earned: null, scored_at: null, is_locked: false })
+      .eq('match_id', matchId)
 
-    // Get all pools that have predictions for this match
+    // Get affected pools and recalculate leaderboard
     const { data: poolRows } = await admin
       .from('predictions')
       .select('pool_id')
       .eq('match_id', matchId)
 
     const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
-
-    // Recalculate leaderboard for each pool
     for (const poolId of distinctPools) {
       const { error: lbErr } = await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
-      if (lbErr) {
-        // DB function has ambiguous 'id' bug — run fix SQL via management API is not possible here.
-        // The user must apply fix-leaderboard-ambiguity.sql in Supabase Dashboard.
-        return { error: `Error en leaderboard (aplica fix-leaderboard-ambiguity.sql en Supabase): ${lbErr.message}` }
-      }
+      if (lbErr) return { error: `Leaderboard error: ${lbErr.message}` }
+    }
+  }
+
+  if (isNowFinished) {
+    // Score all predictions for this match
+    const { error: scoreErr } = await admin.rpc('score_match_predictions', { p_match_id: matchId })
+    if (scoreErr) return { error: `Score error: ${scoreErr.message}` }
+
+    const { data: poolRows } = await admin
+      .from('predictions')
+      .select('pool_id')
+      .eq('match_id', matchId)
+
+    const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
+    for (const poolId of distinctPools) {
+      const { error: lbErr } = await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
+      if (lbErr) return { error: `Leaderboard error: ${lbErr.message}` }
     }
   }
 

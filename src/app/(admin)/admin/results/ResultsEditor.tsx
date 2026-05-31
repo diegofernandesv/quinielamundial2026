@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Loader2Icon, CheckCircle2Icon } from 'lucide-react'
+import { Loader2Icon, CheckCircle2Icon, AlertTriangleIcon } from 'lucide-react'
 import { updateMatchResult } from '@/actions/updateMatchResult'
 import { matchResultSchema, type MatchResultInput } from '@/lib/validations/match'
 import { formatMatchDate } from '@/lib/utils/format'
@@ -44,14 +44,20 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
 
   async function onSubmit(data: MatchResultInput) {
     if (!editing) return
+    const isReverting = editing.status === 'finished' && data.status !== 'finished'
     setLoading(true)
     const result = await updateMatchResult(editing.id, data)
     setLoading(false)
     if (result.error) { toast.error(result.error); return }
-    setMatches(m => m.map(mt => mt.id === editing.id ? { ...mt, ...data } : mt))
-    toast.success(data.status === 'finished'
-      ? 'Partido finalizado · Predicciones calificadas · Leaderboard actualizado'
-      : 'Resultado actualizado')
+    const updatedData = isReverting ? { ...data, home_goals: null, away_goals: null } : data
+    setMatches(m => m.map(mt => mt.id === editing.id ? { ...mt, ...updatedData } : mt))
+    if (isReverting) {
+      toast.success('Partido revertido · Puntos eliminados · Leaderboard actualizado')
+    } else if (data.status === 'finished') {
+      toast.success('Partido finalizado · Predicciones calificadas · Leaderboard actualizado')
+    } else {
+      toast.success('Resultado actualizado')
+    }
     setEditing(null)
   }
 
@@ -120,6 +126,12 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
           {editing && (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {editing.status === 'finished' && form.watch('status') !== 'finished' && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
+                    <AlertTriangleIcon className="size-4 mt-0.5 shrink-0" />
+                    <span>Se eliminarán los puntos ganados y se actualizará el leaderboard.</span>
+                  </div>
+                )}
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado del partido</FormLabel>
