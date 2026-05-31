@@ -4,7 +4,7 @@ import { matchResultSchema } from '@/lib/validations/match'
 
 export async function updateMatchResult(matchId: string, data: unknown) {
   const parsed = matchResultSchema.safeParse(data)
-  if (!parsed.success) return { error: parsed.error.errors[0].message }
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   // Verify the caller is super_admin
   const userClient = await createClient()
