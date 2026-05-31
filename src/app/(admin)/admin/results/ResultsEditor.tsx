@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Loader2Icon, CheckCircle2Icon } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { updateMatchResult } from '@/actions/updateMatchResult'
 import { matchResultSchema, type MatchResultInput } from '@/lib/validations/match'
 import { formatMatchDate } from '@/lib/utils/format'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,6 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
   const [matches, setMatches] = useState(initialMatches)
   const [editing, setEditing] = useState<Match | null>(null)
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   const form = useForm<MatchResultInput>({
     resolver: zodResolver(matchResultSchema) as any,
@@ -46,11 +45,13 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
   async function onSubmit(data: MatchResultInput) {
     if (!editing) return
     setLoading(true)
-    const { error } = await supabase.from('matches').update(data).eq('id', editing.id)
+    const result = await updateMatchResult(editing.id, data)
     setLoading(false)
-    if (error) { toast.error(error.message); return }
+    if (result.error) { toast.error(result.error); return }
     setMatches(m => m.map(mt => mt.id === editing.id ? { ...mt, ...data } : mt))
-    toast.success('Resultado actualizado · Puntos recalculados automáticamente')
+    toast.success(data.status === 'finished'
+      ? 'Partido finalizado · Predicciones calificadas · Leaderboard actualizado'
+      : 'Resultado actualizado')
     setEditing(null)
   }
 
