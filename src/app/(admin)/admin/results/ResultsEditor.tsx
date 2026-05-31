@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -124,19 +124,19 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
             </DialogTitle>
           </DialogHeader>
           {editing && (
-            <Form {...form}>
+            /* key forces full remount when match changes — fixes Radix Select showing raw value */
+            <Form {...form} key={editing.id}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {editing.status === 'finished' && form.watch('status') !== 'finished' && (
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
-                    <AlertTriangleIcon className="size-4 mt-0.5 shrink-0" />
-                    <span>Se eliminarán los puntos ganados y se actualizará el leaderboard.</span>
-                  </div>
-                )}
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado del partido</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger>
+                          {/* Explicit label avoids Radix not finding it on first render */}
+                          <span>{statusLabels[field.value as keyof typeof statusLabels] ?? field.value}</span>
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
                         <SelectItem value="scheduled">Programado</SelectItem>
                         <SelectItem value="live">En vivo</SelectItem>
@@ -146,6 +146,15 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
                     <FormMessage />
                   </FormItem>
                 )} />
+
+                {/* Warning when reverting a finished match */}
+                {editing.status === 'finished' && form.watch('status') !== 'finished' && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-400">
+                    <AlertTriangleIcon className="size-4 mt-0.5 shrink-0" />
+                    <span>Se eliminarán los puntos ganados y se recalculará el leaderboard.</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <FormField control={form.control} name="home_goals" render={({ field }) => (
                     <FormItem>
@@ -162,11 +171,27 @@ export function ResultsEditor({ initialMatches }: ResultsEditorProps) {
                     </FormItem>
                   )} />
                 </div>
+
                 <div className="flex gap-2 pt-1">
-                  <Button type="button" variant="outline" onClick={() => setEditing(null)} className="flex-1">Cancelar</Button>
-                  <Button type="submit" disabled={loading} className="flex-1">
-                    {loading ? <Loader2Icon className="mr-2 size-4 animate-spin" /> : <CheckCircle2Icon className="mr-2 size-4" />}
-                    Guardar resultado
+                  <Button type="button" variant="outline" onClick={() => setEditing(null)} className="flex-1">
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    variant={editing.status === 'finished' && form.watch('status') !== 'finished' ? 'destructive' : 'default'}
+                    className="flex-1"
+                  >
+                    {loading
+                      ? <Loader2Icon className="mr-2 size-4 animate-spin" />
+                      : editing.status === 'finished' && form.watch('status') !== 'finished'
+                        ? <AlertTriangleIcon className="mr-2 size-4" />
+                        : <CheckCircle2Icon className="mr-2 size-4" />
+                    }
+                    {editing.status === 'finished' && form.watch('status') !== 'finished'
+                      ? 'Revertir partido'
+                      : 'Guardar resultado'
+                    }
                   </Button>
                 </div>
               </form>
