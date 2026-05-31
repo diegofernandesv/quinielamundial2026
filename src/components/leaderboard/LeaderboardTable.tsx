@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { UserAvatar } from '@/components/layout/UserAvatar'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { UserPredictionsSheet } from './UserPredictionsSheet'
 import { downloadCSV, leaderboardToCSV } from '@/lib/utils/csv'
 import { cn } from '@/lib/utils'
 import type { LeaderboardEntry } from '@/types/database'
@@ -15,6 +16,7 @@ interface LeaderboardTableProps {
   entries: LeaderboardEntry[]
   currentUserId?: string
   poolName?: string
+  poolId: string
 }
 
 const medalColors: Record<number, string> = {
@@ -23,8 +25,9 @@ const medalColors: Record<number, string> = {
   3: 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400',
 }
 
-export function LeaderboardTable({ entries, currentUserId, poolName }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, poolName, poolId }: LeaderboardTableProps) {
   const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<LeaderboardEntry | null>(null)
 
   const filtered = entries.filter(e => {
     const name = (e.profile?.nickname ?? e.profile?.full_name ?? '').toLowerCase()
@@ -42,6 +45,11 @@ export function LeaderboardTable({ entries, currentUserId, poolName }: Leaderboa
 
   return (
     <div className="space-y-4">
+      <UserPredictionsSheet
+        entry={selected}
+        poolId={poolId}
+        onClose={() => setSelected(null)}
+      />
       <div className="flex items-center gap-3">
         <Input
           placeholder="Buscar participante..."
@@ -78,7 +86,11 @@ export function LeaderboardTable({ entries, currentUserId, poolName }: Leaderboa
               return (
                 <TableRow
                   key={entry.id}
-                  className={cn("transition-colors", isCurrentUser && "bg-primary/5 border-l-2 border-l-primary")}
+                  onClick={() => setSelected(entry)}
+                  className={cn(
+                    "transition-colors cursor-pointer hover:bg-muted/60",
+                    isCurrentUser && "bg-primary/5 border-l-2 border-l-primary"
+                  )}
                 >
                   <TableCell className="text-center">
                     <span className={cn(

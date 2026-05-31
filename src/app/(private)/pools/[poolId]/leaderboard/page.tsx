@@ -54,6 +54,7 @@ export default async function LeaderboardPage({ params }: { params: Promise<{ po
           entries={leaderboard}
           currentUserId={user.id}
           poolName={pool?.name}
+          poolId={poolId}
         />
       </Suspense>
     </div>
