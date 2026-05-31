@@ -3,7 +3,11 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+// modal=false so the Select popup works inside base-ui Dialog (both default to modal=true,
+// which causes the Dialog's focus trap to block the Select popup).
+function Select({ modal = false, ...props }: SelectPrimitive.Root.Props) {
+  return <SelectPrimitive.Root modal={modal} {...props} />
+}
 const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 
