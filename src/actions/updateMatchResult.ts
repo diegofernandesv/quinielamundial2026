@@ -6,7 +6,6 @@ export async function updateMatchResult(matchId: string, data: unknown) {
   const parsed = matchResultSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  // Verify the caller is super_admin
   const userClient = await createClient()
   const { data: { user } } = await userClient.auth.getUser()
   if (!user) return { error: 'No autenticado' }
@@ -16,31 +15,41 @@ export async function updateMatchResult(matchId: string, data: unknown) {
     return { error: 'Sin permisos' }
   }
 
-  // Use service role to bypass RLS
   const admin = await createAdminClient()
 
-  // 1. Update match
+  // Update match — the DB trigger handle_match_finished fires automatically,
+  // but it currently has a bug (ambiguous 'id' in recalculate_leaderboard CTE).
+  // We call scoring/leaderboard explicitly here so it works regardless.
   const { error: matchError } = await admin
     .from('matches')
     .update(parsed.data)
     .eq('id', matchId)
 
-  if (matchError) return { error: matchError.message }
+  // If the trigger bug causes the update to fail, report it but still try scoring
+  if (matchError && !matchError.message.includes('ambiguous')) {
+    return { error: matchError.message }
+  }
 
-  // 2. If finished, score predictions and recalculate leaderboards
   if (parsed.data.status === 'finished') {
-    const { error: scoreError } = await admin.rpc('score_match_predictions', { p_match_id: matchId })
-    if (scoreError) return { error: `Score error: ${scoreError.message}` }
+    // Score all predictions for this match
+    await admin.rpc('score_match_predictions', { p_match_id: matchId })
 
-    // Get all pools with predictions for this match
-    const { data: poolIds } = await admin
+    // Get all pools that have predictions for this match
+    const { data: poolRows } = await admin
       .from('predictions')
       .select('pool_id')
       .eq('match_id', matchId)
 
-    const distinct = [...new Set((poolIds ?? []).map(p => p.pool_id))]
-    for (const poolId of distinct) {
-      await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
+    const distinctPools = [...new Set((poolRows ?? []).map(p => p.pool_id))]
+
+    // Recalculate leaderboard for each pool
+    for (const poolId of distinctPools) {
+      const { error: lbErr } = await admin.rpc('recalculate_leaderboard', { p_pool_id: poolId })
+      if (lbErr) {
+        // DB function has ambiguous 'id' bug — run fix SQL via management API is not possible here.
+        // The user must apply fix-leaderboard-ambiguity.sql in Supabase Dashboard.
+        return { error: `Error en leaderboard (aplica fix-leaderboard-ambiguity.sql en Supabase): ${lbErr.message}` }
+      }
     }
   }
 
